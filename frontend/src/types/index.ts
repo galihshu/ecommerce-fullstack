@@ -76,6 +76,38 @@ export interface CartContextType {
   removeFromCart: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
+  refreshCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+}
+
+export interface Order {
+  id: number;
+  user_id: number;
+  order_number: string;
+  status: string;
+  subtotal: number;
+  tax: number;
+  shipping_cost: number;
+  total_amount: number;
+  payment_method: string;
+  payment_status: string;
+  shipping_address: string;
+  tracking_number?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  order_items?: OrderItem[];
+}
+
+export interface OrderItem {
+  id: number;
+  order_id: number;
+  product_id: number;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  created_at: string;
+  updated_at: string;
+  product?: Product;
 }

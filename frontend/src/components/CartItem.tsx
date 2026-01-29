@@ -33,15 +33,40 @@ const CartItem: React.FC<CartItemComponentProps> = ({ item }) => {
 
   const totalPrice = product.price * quantity;
 
+  // Image handling with fallback
+  const getImageUrl = (image: string | undefined) => {
+    if (!image) {
+      return 'https://via.placeholder.com/150x150/cccccc/666666?text=No+Image';
+    }
+    
+    // If image is a relative path, add base URL
+    if (image.startsWith('/')) {
+      return `http://localhost:8080${image}`;
+    }
+    
+    // If image is already a full URL, return as is
+    if (image.startsWith('http')) {
+      return image;
+    }
+    
+    // Default fallback
+    return `http://localhost:8080/uploads/${image}`;
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.src = 'https://via.placeholder.com/150x150/cccccc/666666?text=No+Image';
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
       <div className="flex flex-col sm:flex-row gap-4">
         {/* Product Image */}
         <div className="flex-shrink-0">
           <img
-            src={product.image}
+            src={getImageUrl(product.image)}
             alt={product.name}
             className="w-24 h-24 object-cover rounded-lg"
+            onError={handleImageError}
           />
         </div>
 
