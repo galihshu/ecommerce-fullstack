@@ -29,14 +29,19 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Only redirect to login if it's not a profile check during app initialization
+      // Only logout if it's not a profile check and user is actually logged in
       const isProfileCheck = error.config?.url?.includes('/auth/profile');
+      const hasToken = localStorage.getItem('token');
       
-      if (!isProfileCheck) {
-        // Token expired or invalid
+      if (!isProfileCheck && hasToken) {
+        // Token expired or invalid - clear auth data
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);
@@ -73,6 +78,14 @@ export const ordersAPI = {
   getOrder: (id: number) => api.get(`/orders/${id}`),
   createOrder: (data: any) => api.post('/orders', data),
   updateOrderStatus: (id: number, status: string) => api.put(`/orders/${id}/status`, { status }),
+};
+
+// Checkout API
+export const checkoutAPI = {
+  checkout: (data: any) => api.post('/protected/checkout', data),
+  getOrderHistory: () => api.get('/protected/checkout/history'),
+  getOrderDetails: (id: number) => api.get(`/protected/checkout/orders/${id}`),
+  cancelOrder: (id: number) => api.put(`/protected/checkout/orders/${id}/cancel`),
 };
 
 // Admin API

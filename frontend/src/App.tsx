@@ -7,6 +7,8 @@ import { Navbar, Footer } from './components/user-components';
 import { AdminLayout, ProtectedRoute } from './components';
 // User Pages (direct import)
 import { Homepage, ProductsPage, ProductDetail, CartPage, LoginPage, RegisterPage } from './pages/user-pages';
+import OrderPage from './pages/OrderPage';
+import OrdersPage from './pages/OrdersPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import DemoCartPage from './pages/DemoCartPage';
@@ -34,6 +36,8 @@ function App() {
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
                     <Route path="/order-success" element={<OrderSuccessPage />} />
+                    <Route path="/orders" element={<OrdersPage />} />
+                    <Route path="/orders/:id" element={<OrderPage />} />
                   </Routes>
                 </main>
                 <Footer />
