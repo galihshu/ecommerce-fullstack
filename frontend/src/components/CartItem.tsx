@@ -11,6 +11,10 @@ const CartItem: React.FC<CartItemComponentProps> = ({ item }) => {
   const { updateQuantity, removeFromCart } = useCart();
   const { product, quantity } = item;
 
+  if (!product) {
+    return null;
+  }
+
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity <= 0) {
       removeFromCart(product.id);
@@ -51,7 +55,7 @@ const CartItem: React.FC<CartItemComponentProps> = ({ item }) => {
               >
                 {product.name}
               </RouterLink>
-              <p className="text-sm text-gray-500">{product.category}</p>
+              <p className="text-sm text-gray-500">{product.category?.name || 'Uncategorized'}</p>
             </div>
             <button
               onClick={() => removeFromCart(product.id)}

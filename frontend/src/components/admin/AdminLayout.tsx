@@ -80,11 +80,11 @@ const AdminLayout: React.FC = () => {
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold">
-                  {user?.name?.charAt(0).toUpperCase()}
+                  {user?.first_name?.charAt(0).toUpperCase()}
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user?.name}</p>
+                <p className="text-sm font-medium text-white truncate">{user?.first_name} {user?.last_name}</p>
                 <p className="text-xs text-gray-400 truncate">{user?.email}</p>
               </div>
             </div>

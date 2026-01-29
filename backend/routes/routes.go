@@ -31,6 +31,7 @@ func ProtectedRoutes(app fiber.Router) {
 	// Cart routes
 	cart := app.Group("/cart")
 	cart.Get("/", handlers.GetCart)
+	cart.Get("/summary", handlers.GetCartSummary)
 	cart.Post("/add", handlers.AddToCart)
 	cart.Put("/items/:id", handlers.UpdateCartItem)
 	cart.Delete("/items/:id", handlers.RemoveFromCart)

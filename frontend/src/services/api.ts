@@ -59,11 +59,12 @@ export const productsAPI = {
 
 // Cart API
 export const cartAPI = {
-  getCart: () => api.get('/cart'),
-  addToCart: (data: any) => api.post('/cart/add', data),
-  updateCartItem: (id: number, data: any) => api.put(`/cart/items/${id}`, data),
-  removeFromCart: (id: number) => api.delete(`/cart/items/${id}`),
-  clearCart: () => api.delete('/cart/clear'),
+  getCart: () => api.get('/protected/cart'),
+  getCartSummary: () => api.get('/protected/cart/summary'),
+  addToCart: (data: any) => api.post('/protected/cart/add', data),
+  updateCartItem: (id: number, data: any) => api.put(`/protected/cart/items/${id}`, data),
+  removeFromCart: (id: number) => api.delete(`/protected/cart/items/${id}`),
+  clearCart: () => api.delete('/protected/cart/clear'),
 };
 
 // Orders API
