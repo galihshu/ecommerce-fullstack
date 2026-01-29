@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"time"
 
 	"ecommerce-backend/config"
@@ -21,8 +22,9 @@ type RegisterRequest struct {
 }
 
 type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Email     string                   `json:"email" validate:"required,email"`
+	Password  string                   `json:"password" validate:"required"`
+	GuestCart []map[string]interface{} `json:"guest_cart"` // Array of guest cart items
 }
 
 type AuthResponse struct {
@@ -148,6 +150,20 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
+	// Merge guest cart if provided
+	if len(req.GuestCart) > 0 {
+		fmt.Printf("Login: Guest cart found with %d items\n", len(req.GuestCart))
+		fmt.Printf("Login: Guest cart data: %+v\n", req.GuestCart)
+		if err := mergeGuestCart(user.ID, req.GuestCart); err != nil {
+			// Log error but don't fail login
+			fmt.Printf("Failed to merge guest cart: %v\n", err)
+		} else {
+			fmt.Printf("Guest cart merged successfully for user %d\n", user.ID)
+		}
+	} else {
+		fmt.Printf("Login: No guest cart provided for user %d\n", user.ID)
+	}
+
 	// Remove password from response
 	user.Password = ""
 
@@ -183,4 +199,87 @@ func generateJWT(userID uint, role string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(config.GetString("JWT_SECRET", "your-super-secret-jwt-key")))
+}
+
+// mergeGuestCart merges guest cart items to user cart
+func mergeGuestCart(userID uint, guestCart []map[string]interface{}) error {
+	db := database.GetDB()
+
+	fmt.Printf("Merging guest cart for user %d with %d items\n", userID, len(guestCart))
+
+	// Get or create user cart
+	var cart models.Cart
+	if err := db.Where("user_id = ? AND is_active = ?", userID, true).First(&cart).Error; err != nil {
+		// Create new cart if not exists
+		cart = models.Cart{
+			UserID:   userID,
+			IsActive: true,
+		}
+		if err := db.Create(&cart).Error; err != nil {
+			return fmt.Errorf("failed to create cart: %w", err)
+		}
+		fmt.Printf("Created new cart with ID: %d\n", cart.ID)
+	} else {
+		fmt.Printf("Found existing cart with ID: %d\n", cart.ID)
+	}
+
+	// Add guest cart items to user cart
+	for i, item := range guestCart {
+		fmt.Printf("Processing guest cart item %d: %+v\n", i, item)
+
+		productIDFloat, ok := item["product_id"].(float64)
+		if !ok {
+			fmt.Printf("Invalid product_id in item %d\n", i)
+			continue
+		}
+		productID := uint(productIDFloat)
+
+		quantityFloat, ok := item["quantity"].(float64)
+		if !ok {
+			fmt.Printf("Invalid quantity in item %d\n", i)
+			continue
+		}
+		quantity := int(quantityFloat)
+
+		fmt.Printf("Processing: ProductID=%d, Quantity=%d\n", productID, quantity)
+
+		// Check if product exists
+		var product models.Product
+		if err := db.First(&product, productID).Error; err != nil {
+			fmt.Printf("Product %d not found, skipping\n", productID)
+			continue // Skip if product doesn't exist
+		}
+
+		// Check if item already exists in cart
+		var existingItem models.CartItem
+		if err := db.Joins("JOIN carts ON cart_items.cart_id = carts.id").
+			Where("cart_items.product_id = ? AND carts.user_id = ? AND carts.is_active = ?", productID, userID, true).
+			First(&existingItem).Error; err == nil {
+			// Update quantity if item exists
+			newQuantity := existingItem.Quantity + quantity
+			if newQuantity <= product.Stock {
+				if err := db.Model(&existingItem).Where("id = ?", existingItem.ID).Update("quantity", newQuantity).Error; err != nil {
+					return fmt.Errorf("failed to update cart item: %w", err)
+				}
+				fmt.Printf("Updated existing cart item: New quantity=%d\n", newQuantity)
+			} else {
+				fmt.Printf("Quantity exceeds stock, keeping existing quantity\n")
+			}
+		} else {
+			// Create new cart item if not exists
+			cartItem := models.CartItem{
+				CartID:    cart.ID,
+				ProductID: productID,
+				Quantity:  quantity,
+			}
+			if err := db.Create(&cartItem).Error; err != nil {
+				return fmt.Errorf("failed to create cart item: %w", err)
+			}
+			fmt.Printf("Created new cart item: CartID=%d, ProductID=%d, Quantity=%d\n",
+				cartItem.CartID, cartItem.ProductID, cartItem.Quantity)
+		}
+	}
+
+	fmt.Printf("Guest cart merge completed for user %d\n", userID)
+	return nil
 }

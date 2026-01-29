@@ -36,6 +36,13 @@ func ProtectedRoutes(app fiber.Router) {
 	cart.Put("/items/:id", handlers.UpdateCartItem)
 	cart.Delete("/items/:id", handlers.RemoveFromCart)
 	cart.Delete("/clear", handlers.ClearCart)
+
+	// Checkout routes
+	checkout := app.Group("/checkout")
+	checkout.Post("/", handlers.Checkout)
+	checkout.Get("/history", handlers.GetOrderHistory)
+	checkout.Get("/orders/:id", handlers.GetOrderDetails)
+	checkout.Put("/orders/:id/cancel", handlers.CancelOrder)
 }
 
 // AdminRoutes handles admin-only routes
