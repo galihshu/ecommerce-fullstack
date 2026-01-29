@@ -7,10 +7,46 @@ definitions:
       user:
         $ref: '#/definitions/models.User'
     type: object
+  handlers.CheckoutRequest:
+    properties:
+      notes:
+        type: string
+      payment_method:
+        enum:
+        - cod
+        - bank_transfer
+        type: string
+      shipping_address:
+        $ref: '#/definitions/models.Address'
+    required:
+    - payment_method
+    - shipping_address
+    type: object
+  handlers.CheckoutResponse:
+    properties:
+      message:
+        type: string
+      order_id:
+        type: integer
+      order_number:
+        type: string
+      payment_method:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: integer
+    type: object
   handlers.LoginRequest:
     properties:
       email:
         type: string
+      guest_cart:
+        description: Array of guest cart items
+        items:
+          additionalProperties: true
+          type: object
+        type: array
       password:
         type: string
     required:
@@ -666,6 +702,24 @@ paths:
       summary: Update cart item
       tags:
       - cart
+  /cart/summary:
+    get:
+      consumes:
+      - application/json
+      description: Get cart summary with subtotal and total calculations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get cart summary
+      tags:
+      - cart
   /categories:
     get:
       consumes:
@@ -752,6 +806,161 @@ paths:
       summary: Get product by ID
       tags:
       - products
+  /protected/checkout:
+    post:
+      consumes:
+      - application/json
+      description: Process checkout and create order from user's active cart items
+      parameters:
+      - description: Checkout data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CheckoutRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.CheckoutResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create order from cart
+      tags:
+      - checkout
+  /protected/checkout/history:
+    get:
+      consumes:
+      - application/json
+      description: Get all orders for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Order'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user order history
+      tags:
+      - checkout
+  /protected/checkout/orders/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information for a specific order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Order'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get order details
+      tags:
+      - checkout
+  /protected/checkout/orders/{id}/cancel:
+    put:
+      consumes:
+      - application/json
+      description: Cancel a specific order (only if it's still pending)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Cancel order
+      tags:
+      - checkout
 securityDefinitions:
   BearerAuth:
     in: header
