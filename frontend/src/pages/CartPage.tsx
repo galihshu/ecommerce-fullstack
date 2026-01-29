@@ -1,12 +1,10 @@
 import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
 import CartItem from '../components/CartItem';
 
 const CartPage: React.FC = () => {
   const { items, getTotalItems, getTotalPrice, clearCart } = useCart();
-  const { isAuthenticated } = useAuth();
   
   const totalItems = getTotalItems();
   const totalPrice = getTotalPrice();
@@ -140,19 +138,9 @@ const CartPage: React.FC = () => {
               {/* Checkout Button */}
               <RouterLink
                 to="/checkout"
-                className={`w-full py-3 text-white rounded-lg font-semibold transition-colors text-center block ${
-                  isAuthenticated 
-                    ? 'bg-blue-600 hover:bg-blue-700' 
-                    : 'bg-gray-400 cursor-not-allowed'
-                }`}
-                onClick={(e) => {
-                  if (!isAuthenticated) {
-                    e.preventDefault();
-                    alert('Please login to proceed with checkout');
-                  }
-                }}
+                className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center block"
               >
-                {isAuthenticated ? 'Proceed to Checkout' : 'Login to Checkout'}
+                Proceed to Checkout
               </RouterLink>
 
               {/* Security Badge */}
