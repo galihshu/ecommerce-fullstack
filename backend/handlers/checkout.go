@@ -27,6 +27,19 @@ type CheckoutResponse struct {
 	Message       string `json:"message"`
 }
 
+// Checkout creates a new order from user's cart
+// @Summary Create order from cart
+// @Description Process checkout and create order from user's active cart items
+// @Tags checkout
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body CheckoutRequest true "Checkout data"
+// @Success 201 {object} CheckoutResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /protected/checkout [post]
 func Checkout(c *fiber.Ctx) error {
 	// Get user from context (set by JWT middleware)
 	user := c.Locals("user").(models.User)
@@ -158,6 +171,17 @@ func Checkout(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(response)
 }
 
+// GetOrderHistory retrieves user's order history
+// @Summary Get user order history
+// @Description Get all orders for the authenticated user
+// @Tags checkout
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} models.Order
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /protected/checkout/history [get]
 func GetOrderHistory(c *fiber.Ctx) error {
 	// Get user from context (set by JWT middleware)
 	user := c.Locals("user").(models.User)
@@ -184,6 +208,20 @@ func GetOrderHistory(c *fiber.Ctx) error {
 	return c.JSON(orders)
 }
 
+// GetOrderDetails retrieves specific order details
+// @Summary Get order details
+// @Description Get detailed information for a specific order
+// @Tags checkout
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Success 200 {object} models.Order
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /protected/checkout/orders/{id} [get]
 func GetOrderDetails(c *fiber.Ctx) error {
 	// Get user from context (set by JWT middleware)
 	user := c.Locals("user").(models.User)
@@ -214,6 +252,20 @@ func GetOrderDetails(c *fiber.Ctx) error {
 	return c.JSON(order)
 }
 
+// CancelOrder cancels a user's order
+// @Summary Cancel order
+// @Description Cancel a specific order (only if it's still pending)
+// @Tags checkout
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /protected/checkout/orders/{id}/cancel [put]
 func CancelOrder(c *fiber.Ctx) error {
 	// Get user from context (set by JWT middleware)
 	user := c.Locals("user").(models.User)
