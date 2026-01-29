@@ -21,6 +21,10 @@ const Navbar: React.FC = () => {
     { name: 'Cart', path: '/cart' },
   ];
 
+  const authNavItems = [
+    { name: 'My Orders', path: '/orders' },
+  ];
+
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,6 +39,17 @@ const Navbar: React.FC = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
+              <RouterLink
+                key={item.name}
+                to={item.path}
+                className="text-gray-600 hover:text-blue-500 font-medium transition-colors"
+              >
+                {item.name}
+              </RouterLink>
+            ))}
+            
+            {/* Authenticated User Navigation */}
+            {isAuthenticated && authNavItems.map((item) => (
               <RouterLink
                 key={item.name}
                 to={item.path}
@@ -134,6 +149,18 @@ const Navbar: React.FC = () => {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               {navItems.map((item) => (
+                <RouterLink
+                  key={item.name}
+                  to={item.path}
+                  className="block px-3 py-2 text-gray-600 hover:text-blue-500 font-medium transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.name}
+                </RouterLink>
+              ))}
+              
+              {/* Authenticated User Mobile Navigation */}
+              {isAuthenticated && authNavItems.map((item) => (
                 <RouterLink
                   key={item.name}
                   to={item.path}

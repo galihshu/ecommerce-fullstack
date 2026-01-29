@@ -32,11 +32,7 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,13 +45,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
         
-        // Only verify token if we have one
-        authAPI.getProfile().catch(() => {
-          // Token invalid, clear storage but don't redirect
-          setUser(null);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        });
+        // Don't verify token on mount - let API interceptors handle it
+        // This prevents double logout issues
       } catch (error) {
         // Clear invalid data
         setUser(null);
@@ -68,7 +59,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await authAPI.login({ email, password });
+      // Get guest cart from localStorage
+      const guestCartStr = localStorage.getItem('guest_cart');
+      let guestCart = [];
+      if (guestCartStr) {
+        try {
+          guestCart = JSON.parse(guestCartStr);
+        } catch (error) {
+          console.error('Failed to parse guest cart:', error);
+        }
+      }
+      
+      console.log('AuthContext: Sending login with guest cart:', guestCart);
+
+      const response = await authAPI.login({ 
+        email, 
+        password, 
+        guest_cart: guestCart 
+      });
       const authData: AuthResponse = response.data;
       
       const userData: User = {
@@ -83,6 +91,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(userData);
       localStorage.setItem('token', authData.token);
       localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Clear guest cart after successful login but with longer delay
+      // to ensure cart merge is complete and frontend has loaded merged cart
+      setTimeout(() => {
+        console.log('AuthContext: Clearing guest cart from localStorage after merge');
+        localStorage.removeItem('guest_cart');
+      }, 3000); // Increased delay to 3 seconds
+      
       return true;
     } catch (error) {
       console.error('Login failed:', error);

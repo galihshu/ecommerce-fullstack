@@ -53,3 +53,8 @@ func ConnectDB() {
 	// Seed initial data
 	seedData()
 }
+
+// GetDB returns the database connection
+func GetDB() *gorm.DB {
+	return DB
+}
