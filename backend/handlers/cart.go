@@ -243,6 +243,56 @@ func RemoveFromCart(c *fiber.Ctx) error {
 	})
 }
 
+// GetCartSummary returns cart summary with totals
+// @Summary Get cart summary
+// @Description Get cart summary with subtotal and total calculations
+// @Tags cart
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{}
+// @Router /cart/summary [get]
+func GetCartSummary(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+
+	var cart models.Cart
+	if err := database.DB.Preload("CartItems.Product").Where("user_id = ? AND is_active = ?", user.ID, true).First(&cart).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(fiber.Map{
+				"subtotal":    0,
+				"total_items": 0,
+				"total":       0,
+				"cart_items":  []models.CartItem{},
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get cart",
+		})
+	}
+
+	subtotal := 0.0
+	totalItems := 0
+
+	for _, item := range cart.CartItems {
+		subtotal += float64(item.Quantity) * float64(item.Product.Price)
+		totalItems += item.Quantity
+	}
+
+	// You can add tax, shipping, discount calculations here
+	tax := subtotal * 0.11 // 11% tax for example
+	shipping := 0.0        // Free shipping
+	total := subtotal + tax + shipping
+
+	return c.JSON(fiber.Map{
+		"subtotal":    subtotal,
+		"tax":         tax,
+		"shipping":    shipping,
+		"total":       total,
+		"total_items": totalItems,
+		"cart_items":  cart.CartItems,
+	})
+}
+
 // ClearCart removes all items from the user's cart
 // @Summary Clear cart
 // @Description Clear all items from the user's cart

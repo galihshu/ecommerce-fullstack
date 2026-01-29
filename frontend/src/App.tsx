@@ -9,6 +9,7 @@ import { AdminLayout, ProtectedRoute } from './components';
 import { Homepage, ProductsPage, ProductDetail, CartPage, LoginPage, RegisterPage } from './pages/user-pages';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
+import DemoCartPage from './pages/DemoCartPage';
 // Admin Pages
 import { AdminLoginPage, AdminDashboard, AdminProducts, AdminOrders, AdminUsers, AdminAnalytics, AdminSettings } from './pages/admin';
 
@@ -28,6 +29,7 @@ function App() {
                     <Route path="/products" element={<ProductsPage />} />
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/cart" element={<CartPage />} />
+                    <Route path="/demo-cart" element={<DemoCartPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />

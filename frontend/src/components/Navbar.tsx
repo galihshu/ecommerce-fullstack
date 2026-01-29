@@ -56,7 +56,7 @@ const Navbar: React.FC = () => {
                       Admin
                     </RouterLink>
                   )}
-                  <span className="text-sm text-gray-600">Hi, {user?.name}</span>
+                  <span className="text-sm text-gray-600">Hi, {user?.first_name}</span>
                   <button
                     onClick={handleLogout}
                     className="text-gray-600 hover:text-blue-500 font-medium transition-colors"
@@ -158,7 +158,7 @@ const Navbar: React.FC = () => {
                       </RouterLink>
                     )}
                     <div className="px-3 py-2 text-sm text-gray-600">
-                      Hi, {user?.name}
+                      Hi, {user?.first_name}
                     </div>
                     <button
                       onClick={() => {

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { CartItem, Product, CartContextType, Cart } from '../types';
-import { cartAPI } from '../services/api';
 
 type CartAction =
   | { type: 'SET_CART'; payload: Cart }
@@ -100,78 +99,36 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
-  // Load cart from API on mount
+  // Initialize cart with empty state
   useEffect(() => {
-    const loadCart = async () => {
-      try {
-        dispatch({ type: 'SET_LOADING', payload: true });
-        const response = await cartAPI.getCart();
-        dispatch({ type: 'SET_CART', payload: response.data });
-      } catch (error) {
-        console.error('Failed to load cart:', error);
-        dispatch({ type: 'SET_LOADING', payload: false });
-      }
-    };
-
-    loadCart();
+    dispatch({ type: 'SET_CART', payload: {
+      id: 0,
+      user_id: 0,
+      is_active: false,
+      created_at: '',
+      updated_at: '',
+      cart_items: []
+    } as Cart });
   }, []);
 
   const addToCart = async (product: Product, quantity: number = 1) => {
-    try {
-      await cartAPI.addToCart({ product_id: product.id, quantity });
-      // Reload cart after adding
-      const response = await cartAPI.getCart();
-      dispatch({ type: 'SET_CART', payload: response.data });
-    } catch (error) {
-      console.error('Failed to add to cart:', error);
-      // Fallback to local state
-      dispatch({ type: 'ADD_TO_CART', payload: { product, quantity } });
-    }
+    // Add to local state for all users
+    dispatch({ type: 'ADD_TO_CART', payload: { product, quantity } });
   };
 
   const removeFromCart = async (productId: number) => {
-    try {
-      // Find the cart item ID
-      const cartItem = state.items.find(item => item.product?.id === productId);
-      if (cartItem?.id) {
-        await cartAPI.removeFromCart(cartItem.id);
-        // Reload cart after removing
-        const response = await cartAPI.getCart();
-        dispatch({ type: 'SET_CART', payload: response.data });
-      }
-    } catch (error) {
-      console.error('Failed to remove from cart:', error);
-      // Fallback to local state
-      dispatch({ type: 'REMOVE_FROM_CART', payload: productId });
-    }
+    // Remove from local state
+    dispatch({ type: 'REMOVE_FROM_CART', payload: productId });
   };
 
   const updateQuantity = async (productId: number, quantity: number) => {
-    try {
-      // Find the cart item ID
-      const cartItem = state.items.find(item => item.product?.id === productId);
-      if (cartItem?.id) {
-        await cartAPI.updateCartItem(cartItem.id, { quantity });
-        // Reload cart after updating
-        const response = await cartAPI.getCart();
-        dispatch({ type: 'SET_CART', payload: response.data });
-      }
-    } catch (error) {
-      console.error('Failed to update cart quantity:', error);
-      // Fallback to local state
-      dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } });
-    }
+    // Update in local state
+    dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } });
   };
 
   const clearCart = async () => {
-    try {
-      await cartAPI.clearCart();
-      dispatch({ type: 'CLEAR_CART' });
-    } catch (error) {
-      console.error('Failed to clear cart:', error);
-      // Fallback to local state
-      dispatch({ type: 'CLEAR_CART' });
-    }
+    // Clear local state
+    dispatch({ type: 'CLEAR_CART' });
   };
 
   const getTotalItems = () => {
@@ -186,6 +143,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const value: CartContextType = {
     items: state.items,
+    loading: state.loading,
     addToCart,
     removeFromCart,
     updateQuantity,
