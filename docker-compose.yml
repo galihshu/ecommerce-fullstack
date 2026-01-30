@@ -1,22 +1,4 @@
-version: '3.8'
-
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: ecommerce-postgres
-    environment:
-      POSTGRES_DB: db_ecommerce
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1337
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - ecommerce-network
-
   # Redis Cache
   redis:
     image: redis:7-alpine
@@ -35,7 +17,7 @@ services:
       dockerfile: Dockerfile
     container_name: ecommerce-backend
     environment:
-      DB_HOST: postgres
+      DB_HOST: host.docker.internal
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: 1337
@@ -48,13 +30,14 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - postgres
       - redis
     networks:
       - ecommerce-network
     volumes:
       - ./backend:/app
       - /app/vendor
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # Frontend (Development)
   frontend:
@@ -75,7 +58,6 @@ services:
       - /app/node_modules
 
 volumes:
-  postgres_data:
   redis_data:
 
 networks:
