@@ -3,12 +3,13 @@ package main
 import (
 	"log"
 
+	_ "ecommerce-backend/docs"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
-	_ "ecommerce-backend/docs"
 
 	"ecommerce-backend/config"
 	"ecommerce-backend/database"
@@ -46,21 +47,13 @@ func main() {
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			code := fiber.StatusInternalServerError
-			if e, ok := err.(*fiber.Error); ok {
-				code = e.Code
-			}
-			return c.Status(code).JSON(fiber.Map{
-				"error": err.Error(),
-			})
-		},
+		ErrorHandler: middleware.ErrorHandler,
 	})
 
 	// Middleware
 	app.Use(recover.New())
 	app.Use(logger.New())
-	
+
 	// CORS configuration
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     config.GetString("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174"),
@@ -73,7 +66,7 @@ func main() {
 	// Health check
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"status": "ok",
+			"status":  "ok",
 			"message": "E-Commerce API is running",
 		})
 	})
@@ -85,8 +78,8 @@ func main() {
 			"version": "1.0",
 			"endpoints": fiber.Map{
 				"health": "/health",
-				"api": "/api/v1",
-				"docs": "/swagger/index.html",
+				"api":    "/api/v1",
+				"docs":   "/swagger/index.html",
 			},
 		})
 	})
@@ -96,15 +89,15 @@ func main() {
 
 	// API routes
 	api := app.Group("/api/v1")
-	
+
 	// Public routes
 	routes.PublicRoutes(api)
-	
+
 	// Protected routes
 	protected := api.Group("/protected")
 	protected.Use(middleware.JWTProtected())
 	routes.ProtectedRoutes(protected)
-	
+
 	// Admin routes
 	admin := protected.Group("/admin")
 	admin.Use(middleware.AdminProtected())
@@ -114,7 +107,7 @@ func main() {
 	port := config.GetString("PORT", "8080")
 	log.Printf("Server starting on port %s", port)
 	log.Printf("Swagger documentation available at http://localhost:%s/swagger/index.html", port)
-	
+
 	if err := app.Listen(":" + port); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
