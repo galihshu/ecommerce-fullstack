@@ -4,7 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// ErrorHandler handles errors in a consistent way across the application
+// ErrorHandler provides centralized error handling for the Fiber application
 func ErrorHandler(c *fiber.Ctx, err error) error {
 	code := fiber.StatusInternalServerError
 	if e, ok := err.(*fiber.Error); ok {
