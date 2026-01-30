@@ -4,8 +4,6 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import { useCart } from '../context/CartContext';
 
-import { useAuth } from '../context/AuthContext';
-
 import CartItem from '../components/CartItem';
 
 
@@ -13,8 +11,6 @@ import CartItem from '../components/CartItem';
 const CartPage: React.FC = () => {
 
   const { items, getTotalItems, getTotalPrice, clearCart } = useCart();
-
-  const { isAuthenticated } = useAuth();
 
   
 
