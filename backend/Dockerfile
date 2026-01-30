@@ -32,6 +32,9 @@ WORKDIR /root/
 # Copy the binary from builder stage
 COPY --from=builder /app/main .
 
+# Copy docs folder for Swagger
+COPY --from=builder /app/docs ./docs
+
 # Expose port
 EXPOSE 8080
 
