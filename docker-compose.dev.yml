@@ -2,7 +2,7 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: ecommerce-redis
+    container_name: ecommerce-redis-dev
     ports:
       - "6379:6379"
     volumes:
@@ -15,7 +15,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: ecommerce-backend
+    container_name: ecommerce-backend-dev
     environment:
       DB_HOST: host.docker.internal
       DB_PORT: 5432
@@ -39,18 +39,23 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  # Frontend (Production)
+  # Frontend (Development)
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    container_name: ecommerce-frontend
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-frontend-dev
+    environment:
+      VITE_API_URL: http://localhost:8080/api/v1
     ports:
-      - "80:80"
+      - "5173:5173"
     depends_on:
       - backend
     networks:
       - ecommerce-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
 volumes:
   redis_data:

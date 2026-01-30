@@ -1,42 +1,29 @@
 @echo off
-echo Building Production Version...
+echo Building Production Version with Docker...
 echo.
 
-:: Navigate to frontend directory
-cd /d "%~dp0frontend"
+:: Stop existing containers
+echo Stopping existing containers...
+docker-compose -f docker-compose.prod.yml down
 
-:: Install dependencies if needed
-echo Installing dependencies...
-call npm install
-
-:: Build production version
+:: Build and start production containers
 echo.
-echo Building frontend for production...
-call npm run build
+echo Building and starting production containers...
+docker-compose -f docker-compose.prod.yml up --build -d
 
-:: Check if build was successful
-if exist "dist" (
-    echo.
-    echo ✅ Build successful!
-    echo Frontend is ready for production deployment.
-    echo.
-    echo Build files are located in: frontend\dist\
-    echo.
-    
-    :: Option to serve the build
-    set /p serve="Do you want to serve the production build locally? (y/n): "
-    if /i "%serve%"=="y" (
-        echo.
-        echo Starting production server...
-        echo The app will be available at: http://localhost:4173
-        echo Press Ctrl+C to stop the server.
-        echo.
-        call npm run preview
-    )
-) else (
-    echo.
-    echo ❌ Build failed! Please check the error messages above.
-)
+:: Check if containers are running
+echo.
+echo Checking container status...
+docker-compose -f docker-compose.prod.yml ps
 
+echo.
+echo ✅ Production build complete!
+echo.
+echo 🌐 Frontend: http://localhost:80
+echo 🔧 Backend API: http://localhost:8080
+echo 🗄️  Redis: localhost:6379
+echo.
+echo To view logs: docker-compose -f docker-compose.prod.yml logs -f
+echo To stop: docker-compose -f docker-compose.prod.yml down
 echo.
 pause
