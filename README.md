@@ -24,6 +24,8 @@ A complete e-commerce application built with Go (Fiber) backend and React (TypeS
 ### DevOps
 - **Docker** - Containerization
 - **Docker Compose** - Multi-container orchestration
+- **Nginx** - Production web server
+- **Multi-stage builds** - Optimized Docker images
 
 ## 📁 Project Structure
 
@@ -49,8 +51,15 @@ ecommerce-fullstack/
 │   │   ├── types/         # TypeScript type definitions
 │   │   └── .env           # Environment variables
 │   ├── package.json       # Node dependencies
-│   └── Dockerfile.dev     # Frontend Docker configuration
-├── docker-compose.yml      # Multi-container setup
+│   ├── Dockerfile         # Production build
+│   ├── Dockerfile.dev     # Development build
+│   └── nginx.conf         # Nginx configuration
+├── docker-compose.yml      # Production setup
+├── docker-compose.dev.yml  # Development setup
+├── docker-compose.prod.yml # Production setup (explicit)
+├── build-production.bat    # Production build script
+├── start-development.bat   # Development start script
+├── README-DOCKER.md        # Docker documentation
 └── README.md              # This file
 ```
 
@@ -62,23 +71,59 @@ ecommerce-fullstack/
 
 ### Quick Start with Docker
 
+#### Development Mode (Hot Reload)
+
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
    cd ecommerce-fullstack
    ```
 
-2. **Start all services**
+2. **Start development environment**
    ```bash
-   docker-compose up -d
+   ./start-development.bat
+   # Or manually:
+   docker-compose -f docker-compose.dev.yml up --build -d
    ```
 
 3. **Access the applications**
-   - Frontend: http://localhost:5173
+   - Frontend (Dev): http://localhost:5173
    - Backend API: http://localhost:8080
    - API Documentation: http://localhost:8080/swagger/index.html
    - PostgreSQL: localhost:5432
    - Redis: localhost:6379
+
+#### Production Mode (Optimized)
+
+1. **Start production environment**
+   ```bash
+   ./build-production.bat
+   # Or manually:
+   docker-compose -f docker-compose.prod.yml up --build -d
+   ```
+
+2. **Access the applications**
+   - Frontend (Prod): http://localhost:80
+   - Backend API: http://localhost:8080
+   - API Documentation: http://localhost:8080/swagger/index.html
+   - PostgreSQL: localhost:5432
+   - Redis: localhost:6379
+
+#### Docker Commands
+
+```bash
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f  # Development
+docker-compose -f docker-compose.prod.yml logs -f # Production
+
+# Stop services
+docker-compose -f docker-compose.dev.yml down  # Development
+docker-compose -f docker-compose.prod.yml down # Production
+
+# Rebuild services
+docker-compose -f docker-compose.dev.yml up --build  # Development
+docker-compose -f docker-compose.prod.yml up --build # Production
+```
 
 ### Manual Setup
 
@@ -266,17 +311,40 @@ VITE_API_URL=http://localhost:8080/api/v1
 
 ## 🚀 Deployment
 
+### Development Deployment
+
+For development with hot-reload and live debugging:
+
+```bash
+# Start development environment
+./start-development.bat
+
+# Or manually:
+docker-compose -f docker-compose.dev.yml up --build -d
+```
+
 ### Production Deployment
 
-1. **Build Docker images**
+For optimized production build:
+
+1. **Build and start production containers**
    ```bash
-   docker-compose -f docker-compose.prod.yml build
+   ./build-production.bat
    ```
 
-2. **Run production containers**
+2. **Or manually:**
    ```bash
+   docker-compose -f docker-compose.prod.yml build
    docker-compose -f docker-compose.prod.yml up -d
    ```
+
+### Production Features
+
+- **Frontend**: Static files served with Nginx
+- **Backend**: Compiled Go binary
+- **Optimization**: Gzip compression, caching headers
+- **Security**: Security headers, HTTPS ready
+- **Performance**: Multi-stage builds, minimal image sizes
 
 ### Environment Considerations
 
@@ -286,6 +354,14 @@ VITE_API_URL=http://localhost:8080/api/v1
 - Set up proper CORS origins
 - Configure Redis with password
 - Use proper logging and monitoring
+- Set up backup strategies for database
+
+### Docker Environment Files
+
+- `docker-compose.yml` - Default production setup
+- `docker-compose.dev.yml` - Development with hot-reload
+- `docker-compose.prod.yml` - Explicit production setup
+- See `README-DOCKER.md` for detailed Docker instructions
 
 ## 🤝 Contributing
 
@@ -324,10 +400,15 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ### Getting Help
 
-- Check the logs: `docker-compose logs [service-name]`
+- Check the logs: 
+  ```bash
+  docker-compose -f docker-compose.dev.yml logs [service-name]  # Development
+  docker-compose -f docker-compose.prod.yml logs [service-name] # Production
+  ```
 - Review API documentation at `/swagger/index.html`
 - Check environment variables
 - Verify network connectivity between services
+- See `README-DOCKER.md` for Docker-specific troubleshooting
 
 ## 🔄 Development Workflow
 

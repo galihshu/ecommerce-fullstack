@@ -2,20 +2,21 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: ecommerce-redis
+    container_name: ecommerce-redis-prod
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
       - ecommerce-network
+    restart: unless-stopped
 
   # Backend API
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: ecommerce-backend
+    container_name: ecommerce-backend-prod
     environment:
       DB_HOST: host.docker.internal
       DB_PORT: 5432
@@ -26,16 +27,14 @@ services:
       REDIS_PORT: 6379
       PORT: 8080
       JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
-      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+      CORS_ORIGINS: http://localhost,http://localhost:80
     ports:
       - "8080:8080"
     depends_on:
       - redis
     networks:
       - ecommerce-network
-    volumes:
-      - ./backend:/app
-      - /app/vendor
+    restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -44,13 +43,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: ecommerce-frontend
+    container_name: ecommerce-frontend-prod
     ports:
       - "80:80"
     depends_on:
       - backend
     networks:
       - ecommerce-network
+    restart: unless-stopped
 
 volumes:
   redis_data:
