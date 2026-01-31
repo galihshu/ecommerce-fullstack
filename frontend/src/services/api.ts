@@ -90,20 +90,31 @@ export const checkoutAPI = {
 
 // Admin API
 export const adminAPI = {
+  // Dashboard
+  getDashboardStats: () => api.get('/protected/admin/dashboard/stats'),
+  getRecentOrders: (params?: any) => api.get('/protected/admin/dashboard/recent-orders', { params }),
+  getTopProducts: (params?: any) => api.get('/protected/admin/dashboard/top-products', { params }),
+  getSalesChart: (params?: any) => api.get('/protected/admin/dashboard/sales-chart', { params }),
+  
   // Products
-  createProduct: (data: any) => api.post('/products', data),
-  updateProduct: (id: number, data: any) => api.put(`/products/${id}`, data),
-  deleteProduct: (id: number) => api.delete(`/products/${id}`),
+  getProducts: (params?: any) => api.get('/protected/admin/products', { params }),
+  createProduct: (data: any) => api.post('/protected/admin/products', data),
+  updateProduct: (id: number, data: any) => api.put(`/protected/admin/products/${id}`, data),
+  deleteProduct: (id: number) => api.delete(`/protected/admin/products/${id}`),
   
   // Users
-  getUsers: () => api.get('/admin/users'),
-  getUser: (id: number) => api.get(`/admin/users/${id}`),
-  updateUser: (id: number, data: any) => api.put(`/admin/users/${id}`, data),
-  deleteUser: (id: number) => api.delete(`/admin/users/${id}`),
+  getUsers: (params?: any) => api.get('/protected/admin/users', { params }),
+  getUser: (id: number) => api.get(`/protected/admin/users/${id}`),
+  createUser: (data: any) => api.post('/protected/admin/users', data),
+  updateUser: (id: number, data: any) => api.put(`/protected/admin/users/${id}`, data),
+  deleteUser: (id: number) => api.delete(`/protected/admin/users/${id}`),
   
   // Orders
-  getOrders: () => api.get('/admin/orders'),
-  updateOrderStatus: (id: number, status: string) => api.put(`/admin/orders/${id}/status`, { status }),
+  getOrders: (params?: any) => api.get('/protected/admin/orders', { params }),
+  getOrderStats: () => api.get('/protected/admin/orders/stats'),
+  getOrder: (id: number) => api.get(`/protected/admin/orders/${id}`),
+  updateOrderStatus: (id: number, data: any) => api.put(`/protected/admin/orders/${id}/status`, data),
+  updatePaymentStatus: (id: number, data: any) => api.put(`/protected/admin/orders/${id}/payment`, data),
 };
 
 export default api;

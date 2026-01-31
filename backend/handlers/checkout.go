@@ -106,7 +106,7 @@ func Checkout(c *fiber.Ctx) error {
 		ShippingCost:    shippingCost,
 		TotalAmount:     totalAmount,
 		PaymentMethod:   req.PaymentMethod,
-		PaymentStatus:   "pending",
+		PaymentStatus:   "unpaid",
 		ShippingAddress: formatShippingAddress(req.ShippingAddress),
 		Notes:           req.Notes,
 	}

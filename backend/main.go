@@ -45,6 +45,9 @@ func main() {
 	database.ConnectDB()
 	database.ConnectRedis()
 
+	// Seed initial data
+	database.SeedData()
+
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
