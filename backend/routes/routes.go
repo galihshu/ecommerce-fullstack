@@ -47,9 +47,33 @@ func ProtectedRoutes(app fiber.Router) {
 
 // AdminRoutes handles admin-only routes
 func AdminRoutes(app fiber.Router) {
+	// Dashboard
+	dashboard := app.Group("/dashboard")
+	dashboard.Get("/stats", handlers.GetDashboardStats)
+	dashboard.Get("/recent-orders", handlers.GetRecentOrders)
+	dashboard.Get("/top-products", handlers.GetTopProducts)
+	dashboard.Get("/sales-chart", handlers.GetSalesChart)
+
 	// Product management
 	products := app.Group("/products")
+	products.Get("/", handlers.GetAdminProducts)
 	products.Post("/", handlers.CreateProduct)
 	products.Put("/:id", handlers.UpdateProduct)
 	products.Delete("/:id", handlers.DeleteProduct)
+
+	// User management
+	users := app.Group("/users")
+	users.Get("/", handlers.GetAdminUsers)
+	users.Get("/:id", handlers.GetAdminUser)
+	users.Post("/", handlers.CreateUser)
+	users.Put("/:id", handlers.UpdateUser)
+	users.Delete("/:id", handlers.DeleteUser)
+
+	// Order management
+	orders := app.Group("/orders")
+	orders.Get("/", handlers.GetAdminOrders)
+	orders.Get("/stats", handlers.GetOrderStats)
+	orders.Get("/:id", handlers.GetAdminOrder)
+	orders.Put("/:id/status", handlers.UpdateOrderStatus)
+	orders.Put("/:id/payment", handlers.UpdatePaymentStatus)
 }

@@ -46,7 +46,7 @@ func GetProducts(c *fiber.Ctx) error {
 	}
 
 	if search != "" {
-		query = query.Where("products.name ILIKE ? OR products.description ILIKE ?", 
+		query = query.Where("products.name ILIKE ? OR products.description ILIKE ?",
 			"%"+search+"%", "%"+search+"%")
 	}
 
@@ -132,6 +132,76 @@ func GetCategories(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(categories)
+}
+
+// GetAdminProducts returns all products (including inactive ones) for admin
+// @Summary Get all products (admin)
+// @Description Get all products with pagination and filtering (admin only, includes inactive products)
+// @Tags products
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Param category query string false "Filter by category"
+// @Param search query string false "Search products"
+// @Param min_price query int false "Minimum price filter"
+// @Param max_price query int false "Maximum price filter"
+// @Success 200 {object} map[string]interface{}
+// @Router /admin/products [get]
+func GetAdminProducts(c *fiber.Ctx) error {
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+	category := c.Query("category")
+	search := c.Query("search")
+	minPrice := c.Query("min_price")
+	maxPrice := c.Query("max_price")
+
+	offset := (page - 1) * limit
+
+	var products []models.Product
+	var total int64
+
+	query := database.DB.Model(&models.Product{}).Preload("Category").Unscoped()
+
+	// Apply filters
+	if category != "" {
+		query = query.Joins("JOIN categories ON products.category_id = categories.id").
+			Where("categories.name ILIKE ?", "%"+category+"%")
+	}
+
+	if search != "" {
+		query = query.Where("products.name ILIKE ? OR products.description ILIKE ?",
+			"%"+search+"%", "%"+search+"%")
+	}
+
+	if minPrice != "" {
+		query = query.Where("products.price >= ?", minPrice)
+	}
+
+	if maxPrice != "" {
+		query = query.Where("products.price <= ?", maxPrice)
+	}
+
+	// Count total records
+	query.Count(&total)
+
+	// Get products with pagination
+	if err := query.Offset(offset).Limit(limit).Find(&products).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch products",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"products": products,
+		"pagination": fiber.Map{
+			"page":       page,
+			"limit":      limit,
+			"total":      total,
+			"totalPages": (total + int64(limit) - 1) / int64(limit),
+		},
+	})
 }
 
 // CreateProduct creates a new product (admin only)
