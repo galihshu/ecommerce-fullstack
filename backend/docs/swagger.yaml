@@ -37,6 +37,30 @@ definitions:
       total_amount:
         type: integer
     type: object
+  handlers.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - role
+    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -71,6 +95,66 @@ definitions:
     - first_name
     - last_name
     - password
+    type: object
+  handlers.SalesData:
+    properties:
+      date:
+        type: string
+      orders:
+        type: integer
+      revenue:
+        type: integer
+    type: object
+  handlers.UpdateOrderStatusRequest:
+    properties:
+      notes:
+        type: string
+      status:
+        enum:
+        - pending
+        - processing
+        - shipped
+        - delivered
+        - cancelled
+        type: string
+      tracking_number:
+        type: string
+    required:
+    - status
+    type: object
+  handlers.UpdatePaymentStatusRequest:
+    properties:
+      payment_status:
+        enum:
+        - unpaid
+        - paid
+        - failed
+        - refunded
+        type: string
+    required:
+    - payment_status
+    type: object
+  handlers.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - role
     type: object
   models.Address:
     properties:
@@ -179,7 +263,7 @@ definitions:
       payment_method:
         type: string
       payment_status:
-        description: pending, paid, failed, refunded
+        description: unpaid, paid, failed, refunded
         type: string
       shipping_address:
         type: string
@@ -356,7 +440,283 @@ info:
   title: E-Commerce API
   version: "1.0"
 paths:
+  /admin/dashboard/recent-orders:
+    get:
+      consumes:
+      - application/json
+      description: Get recent orders for dashboard display
+      parameters:
+      - default: 5
+        description: Number of orders to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get recent orders
+      tags:
+      - dashboard
+  /admin/dashboard/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get comprehensive statistics for admin dashboard
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get dashboard statistics
+      tags:
+      - dashboard
+  /admin/dashboard/top-products:
+    get:
+      consumes:
+      - application/json
+      description: Get top selling products by revenue
+      parameters:
+      - default: 5
+        description: Number of products to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get top selling products
+      tags:
+      - dashboard
+  /admin/orders:
+    get:
+      consumes:
+      - application/json
+      description: Get all orders with pagination and filtering (admin only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search orders by order number or customer name
+        in: query
+        name: search
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Filter by payment status
+        in: query
+        name: payment_status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all orders (admin)
+      tags:
+      - orders
+  /admin/orders/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a single order by ID with full details (admin only)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Order'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get order by ID (admin)
+      tags:
+      - orders
+  /admin/orders/{id}/payment:
+    put:
+      consumes:
+      - application/json
+      description: Update payment status for an order (admin only)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Payment status data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdatePaymentStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Order'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update payment status (admin)
+      tags:
+      - orders
+  /admin/orders/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Update order status and optionally add tracking number (admin only)
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Status update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateOrderStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Order'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update order status (admin)
+      tags:
+      - orders
+  /admin/orders/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get order statistics for dashboard (admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get order statistics (admin)
+      tags:
+      - orders
   /admin/products:
+    get:
+      consumes:
+      - application/json
+      description: Get all products with pagination and filtering (admin only, includes
+        inactive products)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by category
+        in: query
+        name: category
+        type: string
+      - description: Search products
+        in: query
+        name: search
+        type: string
+      - description: Minimum price filter
+        in: query
+        name: min_price
+        type: integer
+      - description: Maximum price filter
+        in: query
+        name: max_price
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all products (admin)
+      tags:
+      - products
     post:
       consumes:
       - application/json
@@ -472,6 +832,179 @@ paths:
       summary: Update product
       tags:
       - products
+  /admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Get all users with pagination and filtering (admin only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search users by name or email
+        in: query
+        name: search
+        type: string
+      - description: Filter by role
+        in: query
+        name: role
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all users (admin)
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account (admin only)
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create new user (admin)
+      tags:
+      - users
+  /admin/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a user (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete user (admin)
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Get a single user by ID (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user by ID (admin)
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update an existing user (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user (admin)
+      tags:
+      - users
   /auth/login:
     post:
       consumes:
@@ -806,6 +1339,36 @@ paths:
       summary: Get product by ID
       tags:
       - products
+  /protected/admin/dashboard/sales-chart:
+    get:
+      consumes:
+      - application/json
+      description: Get sales data for the last N days for chart visualization
+      parameters:
+      - default: 7
+        description: Number of days
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.SalesData'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get sales chart data
+      tags:
+      - dashboard
   /protected/checkout:
     post:
       consumes:

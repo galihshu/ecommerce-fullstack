@@ -12,6 +12,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// SalesData represents sales data for chart visualization
+type SalesData struct {
+	Date    string `json:"date"`
+	Revenue int64  `json:"revenue"`
+	Orders  int64  `json:"orders"`
+}
+
 // GetDashboardStats returns comprehensive dashboard statistics
 // @Summary Get dashboard statistics
 // @Description Get comprehensive statistics for admin dashboard
@@ -161,12 +168,6 @@ func GetSalesChart(c *fiber.Ctx) error {
 		if d, err := strconv.Atoi(c.Query("days")); err == nil && d > 0 && d <= 365 {
 			days = d
 		}
-	}
-
-	type SalesData struct {
-		Date    string `json:"date"`
-		Revenue int64  `json:"revenue"`
-		Orders  int64  `json:"orders"`
 	}
 
 	// Generate date range for the last N days
